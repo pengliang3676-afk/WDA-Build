@@ -1,0 +1,9 @@
+Package: com.jibeib.usbmirror
+Name: SE2 USB Mirror Service
+Depends: mobilesubstrate | ellekit, firmware (>= 15.0)
+Version: 0.2.0
+Architecture: iphoneos-arm64
+Description: Low-latency H.264 screen stream and touch service for owned-device testing.
+Maintainer: jibeib
+Author: jibeib
+Section: Tweaks
