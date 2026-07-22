@@ -232,3 +232,20 @@ void ZXStartH264Server(void)
 {
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{ ZXRunH264Server(); });
 }
+
+__attribute__((constructor))
+static void ZXStartVideoOnlyService(void)
+{
+    @autoreleasepool {
+        // SpringBoard is sensitive during early startup.  Wait until its main
+        // run loop and display services are ready before touching Screen.
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC),
+                       dispatch_get_main_queue(), ^{
+            @autoreleasepool {
+                CGSize size = UIScreen.mainScreen.bounds.size;
+                [Screen setScreenSize:size.width height:size.height];
+                ZXStartH264Server();
+            }
+        });
+    }
+}
