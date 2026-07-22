@@ -7,7 +7,7 @@ include $(THEOS)/makefiles/common.mk
 TWEAK_NAME = USBMirror
 USBMirror_FILES = USBMirror.xm H264Server.mm ../vendor/zxtouchrootless-main/pccontrol/Touch.xm ../vendor/zxtouchrootless-main/pccontrol/Screen.xm ../vendor/zxtouchrootless-main/pccontrol/Common.xm
 USBMirror_CFLAGS = -fobjc-arc -Wno-error -Wno-deprecated-declarations -Wno-unused-function -Wno-module-import-in-extern-c -I. -I../vendor/zxtouchrootless-main/pccontrol
-USBMirror_FRAMEWORKS = UIKit Foundation IOSurface IOMobileFramebuffer VideoToolbox CoreMedia CoreVideo CoreGraphics
+USBMirror_FRAMEWORKS = UIKit Foundation IOSurface VideoToolbox CoreMedia CoreVideo CoreGraphics
 USBMirror_PRIVATE_FRAMEWORKS = IOKit
 USBMirror_LIBRARIES = substrate
 
