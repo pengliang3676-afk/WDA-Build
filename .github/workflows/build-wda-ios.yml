@@ -1,0 +1,43 @@
+name: build-wda-ios
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - name: Checkout official WebDriverAgent
+        uses: actions/checkout@v4
+        with:
+          repository: appium/WebDriverAgent
+          path: WebDriverAgent
+
+      - name: Build unsigned iOS 15+ runner
+        run: |
+          xcodebuild build-for-testing \
+            -project WebDriverAgent/WebDriverAgent.xcodeproj \
+            -scheme WebDriverAgentRunner \
+            -configuration Debug \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$PWD/build" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            DEVELOPMENT_TEAM='' \
+            IPHONEOS_DEPLOYMENT_TARGET=15.0
+
+      - name: Package build products
+        run: |
+          cd build/Build/Products/Debug-iphoneos
+          ditto -c -k --sequesterRsrc --keepParent WebDriverAgentRunner-Runner.app "$GITHUB_WORKSPACE/WebDriverAgentRunner-Runner.app.zip"
+          find . -maxdepth 1 -name '*.xctestrun' -exec cp {} "$GITHUB_WORKSPACE/" \;
+
+      - name: Upload WDA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WebDriverAgentRunner-iOS15-arm64
+          path: |
+            WebDriverAgentRunner-Runner.app.zip
+            *.xctestrun
+          if-no-files-found: error
