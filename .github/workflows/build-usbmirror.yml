@@ -1,0 +1,42 @@
+name: build-usbmirror-h264
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - name: Checkout package sources
+        uses: actions/checkout@v4
+
+      - name: Install Theos build environment
+        run: |
+          brew install ldid xz
+          git clone --recursive --depth 1 https://github.com/theos/theos.git "$HOME/theos"
+          git clone --depth 1 https://github.com/Epic0001/zxtouchrootless.git ZXTouchRootless
+
+      - name: Prepare USBMirror sources
+        run: |
+          mkdir -p vendor/zxtouchrootless-main
+          cp -R ZXTouchRootless/pccontrol vendor/zxtouchrootless-main/
+
+      - name: Build Dopamine rootless package
+        env:
+          THEOS: ${{ runner.temp }}/theos-link
+        run: |
+          ln -s "$HOME/theos" "$THEOS"
+          make -C usbmirror_tweak clean package FINALPACKAGE=1
+
+      - name: Collect package
+        run: |
+          mkdir -p output
+          find usbmirror_tweak/packages -name '*.deb' -exec cp {} output/ \;
+          test -n "$(find output -name '*.deb' -print -quit)"
+
+      - name: Upload one-phone test package
+        uses: actions/upload-artifact@v4
+        with:
+          name: SE2-USBMirror-H264-Dopamine-test
+          path: output/*.deb
+          if-no-files-found: error
