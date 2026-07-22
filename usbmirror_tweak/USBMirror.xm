@@ -6,6 +6,10 @@
 #include "Touch.h"
 #include "Screen.h"
 
+@interface Screen (USBMirrorCapture)
++ (NSData *)screenFrameJPEGWithQuality:(CGFloat)quality maxWidth:(CGFloat)maxWidth;
+@end
+
 extern void ZXStartH264Server(void);
 
 static const int ZXMirrorPort = 6001;
