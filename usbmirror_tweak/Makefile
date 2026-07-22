@@ -1,5 +1,5 @@
 TARGET = iphone:clang:latest:15.0
-ARCHS = arm64
+ARCHS = arm64 arm64e
 THEOS_PACKAGE_SCHEME = rootless
 
 include $(THEOS)/makefiles/common.mk
@@ -10,5 +10,6 @@ USBMirror_CFLAGS = -fobjc-arc -Wno-error -Wno-deprecated-declarations -Wno-unuse
 USBMirror_FRAMEWORKS = UIKit Foundation IOSurface VideoToolbox CoreMedia CoreVideo CoreGraphics
 USBMirror_PRIVATE_FRAMEWORKS = IOKit
 USBMirror_LIBRARIES = substrate
+USBMirror_CODESIGN_FLAGS = -Sentitlements.plist
 
 include $(THEOS_MAKE_PATH)/tweak.mk
