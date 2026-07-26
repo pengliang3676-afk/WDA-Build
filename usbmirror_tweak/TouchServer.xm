@@ -10,6 +10,23 @@
 
 static const int ZXTouchPort = 6000;
 
+static void ZXPressHomeButton(void)
+{
+    static IOHIDEventSystemClientRef client = NULL;
+    if (!client) client = IOHIDEventSystemClientCreate(kCFAllocatorDefault);
+    IOHIDEventRef down = IOHIDEventCreateKeyboardEvent(kCFAllocatorDefault, mach_absolute_time(), 0x0C, 0x40, true, 0);
+    IOHIDEventRef up = IOHIDEventCreateKeyboardEvent(kCFAllocatorDefault, mach_absolute_time(), 0x0C, 0x40, false, 0);
+    if (down) {
+        IOHIDEventSystemClientDispatchEvent(client, down);
+        CFRelease(down);
+    }
+    usleep(50000);
+    if (up) {
+        IOHIDEventSystemClientDispatchEvent(client, up);
+        CFRelease(up);
+    }
+}
+
 static void ZXHandleTouchClient(int client)
 {
     @autoreleasepool {
@@ -47,6 +64,11 @@ static void ZXHandleTouchClient(int client)
                         object:nil
                         userInfo:@{@"action": @"delete", @"count": @(count)}
                         deliverImmediately:YES];
+                }
+                else if (line[0] == '1' && line[1] == '3') {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        ZXPressHomeButton();
+                    });
                 }
                 if (!end) break;
                 line = end + 2;

@@ -1,7 +1,7 @@
 Package: com.jibeib.usbmirror
 Name: SE2 USB Mirror Service
 Depends: mobilesubstrate | ellekit, firmware (>= 15.0)
-Version: 0.2.5
+Version: 0.2.6
 Architecture: iphoneos-arm64
 Description: H.264 video, touch and UTF-8 keyboard input service for owned devices.
 Maintainer: jibeib
