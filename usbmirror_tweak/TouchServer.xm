@@ -45,6 +45,50 @@ static void ZXPressPowerButton(void)
     }
 }
 
+static void ZXDispatchKeyboardUsage(uint32_t usage, bool down)
+{
+    static IOHIDEventSystemClientRef client = NULL;
+    if (!client) client = IOHIDEventSystemClientCreate(kCFAllocatorDefault);
+    IOHIDEventRef event = IOHIDEventCreateKeyboardEvent(
+        kCFAllocatorDefault,
+        mach_absolute_time(),
+        0x07,
+        usage,
+        down,
+        0);
+    if (event) {
+        IOHIDEventSystemClientDispatchEvent(client, event);
+        CFRelease(event);
+    }
+}
+
+static void ZXPasteText(NSString *text)
+{
+    if (!text.length) return;
+    if ([text isEqualToString:@"\n"]) {
+        ZXDispatchKeyboardUsage(0x28, true);
+        usleep(35000);
+        ZXDispatchKeyboardUsage(0x28, false);
+        return;
+    }
+    [UIPasteboard generalPasteboard].string = text;
+    usleep(50000);
+    ZXDispatchKeyboardUsage(0xE3, true);
+    usleep(25000);
+    ZXDispatchKeyboardUsage(0x19, true);
+    usleep(35000);
+    ZXDispatchKeyboardUsage(0x19, false);
+    usleep(25000);
+    ZXDispatchKeyboardUsage(0xE3, false);
+}
+
+static void ZXDeleteBackward(void)
+{
+    ZXDispatchKeyboardUsage(0x2A, true);
+    usleep(35000);
+    ZXDispatchKeyboardUsage(0x2A, false);
+}
+
 static int ZXScreenIsOn(void)
 {
     Class cls = NSClassFromString(@"SBBacklightController");
@@ -84,19 +128,14 @@ static void ZXHandleTouchClient(int client)
                     NSString *text = data ? [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] : nil;
                     if (text) {
                         dispatch_async(dispatch_get_main_queue(), ^{
-                            [UIPasteboard generalPasteboard].string = text;
-                            CFNotificationCenterPostNotification(
-                                CFNotificationCenterGetDarwinNotifyCenter(),
-                                CFSTR("com.jibeib.usbmirror.keyboard.paste"),
-                                NULL, NULL, true);
+                            ZXPasteText(text);
                         });
                     }
                 }
                 else if (line[0] == '1' && line[1] == '2') {
-                    CFNotificationCenterPostNotification(
-                        CFNotificationCenterGetDarwinNotifyCenter(),
-                        CFSTR("com.jibeib.usbmirror.keyboard.delete"),
-                        NULL, NULL, true);
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        ZXDeleteBackward();
+                    });
                 }
                 else if (line[0] == '1' && line[1] == '3') {
                     dispatch_async(dispatch_get_main_queue(), ^{
