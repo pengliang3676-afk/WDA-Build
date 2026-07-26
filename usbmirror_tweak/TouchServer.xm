@@ -106,7 +106,11 @@ static void ZXHandleTouchClient(int client)
                 else if (line[0] == '1' && line[1] == '4') {
                     dispatch_async(dispatch_get_main_queue(), ^{
                         int state = ZXScreenIsOn();
-                        if (state != 1) ZXPressPowerButton();
+                        if (state != 1) {
+                            ZXPressPowerButton();
+                            usleep(350000);
+                        }
+                        ZXPressHomeButton();
                     });
                 }
                 else if (line[0] == '1' && line[1] == '5') {
