@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <string.h>
 #include <unistd.h>
+#include <objc/message.h>
 #include "Screen.h"
 #include "Touch.h"
 
@@ -25,6 +26,38 @@ static void ZXPressHomeButton(void)
         IOHIDEventSystemClientDispatchEvent(client, up);
         CFRelease(up);
     }
+}
+
+static void ZXPressPowerButton(void)
+{
+    static IOHIDEventSystemClientRef client = NULL;
+    if (!client) client = IOHIDEventSystemClientCreate(kCFAllocatorDefault);
+    IOHIDEventRef down = IOHIDEventCreateKeyboardEvent(kCFAllocatorDefault, mach_absolute_time(), 0x0C, 0x30, true, 0);
+    IOHIDEventRef up = IOHIDEventCreateKeyboardEvent(kCFAllocatorDefault, mach_absolute_time(), 0x0C, 0x30, false, 0);
+    if (down) {
+        IOHIDEventSystemClientDispatchEvent(client, down);
+        CFRelease(down);
+    }
+    usleep(70000);
+    if (up) {
+        IOHIDEventSystemClientDispatchEvent(client, up);
+        CFRelease(up);
+    }
+}
+
+static int ZXScreenIsOn(void)
+{
+    Class cls = NSClassFromString(@"SBBacklightController");
+    SEL sharedSelector = NSSelectorFromString(@"sharedInstance");
+    if (!cls || ![cls respondsToSelector:sharedSelector]) return -1;
+    id controller = ((id (*)(id, SEL))objc_msgSend)(cls, sharedSelector);
+    for (NSString *name in @[@"screenIsOn", @"isScreenOn"]) {
+        SEL selector = NSSelectorFromString(name);
+        if ([controller respondsToSelector:selector]) {
+            return ((BOOL (*)(id, SEL))objc_msgSend)(controller, selector) ? 1 : 0;
+        }
+    }
+    return -1;
 }
 
 static void ZXHandleTouchClient(int client)
@@ -68,6 +101,18 @@ static void ZXHandleTouchClient(int client)
                 else if (line[0] == '1' && line[1] == '3') {
                     dispatch_async(dispatch_get_main_queue(), ^{
                         ZXPressHomeButton();
+                    });
+                }
+                else if (line[0] == '1' && line[1] == '4') {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        int state = ZXScreenIsOn();
+                        if (state != 1) ZXPressPowerButton();
+                    });
+                }
+                else if (line[0] == '1' && line[1] == '5') {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        int state = ZXScreenIsOn();
+                        if (state != 0) ZXPressPowerButton();
                     });
                 }
                 if (!end) break;
