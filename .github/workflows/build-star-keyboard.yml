@@ -1,0 +1,45 @@
+name: build-star-keyboard-ios
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate project
+        working-directory: star_keyboard
+        run: xcodegen generate
+
+      - name: Build unsigned app
+        working-directory: star_keyboard
+        run: |
+          xcodebuild \
+            -project StarKeyboard.xcodeproj \
+            -scheme StarKeyboard \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Package IPA
+        working-directory: star_keyboard
+        run: |
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/StarKeyboard.app Payload/
+          /usr/bin/zip -qry StarKeyboard-0.1.0-test.ipa Payload
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: StarKeyboard-0.1.0-test
+          path: star_keyboard/StarKeyboard-0.1.0-test.ipa
+
