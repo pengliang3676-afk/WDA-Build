@@ -83,20 +83,20 @@ static void ZXHandleTouchClient(int client)
                     NSData *data = [[NSData alloc] initWithBase64EncodedString:encoded options:0];
                     NSString *text = data ? [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] : nil;
                     if (text) {
-                        [[NSDistributedNotificationCenter defaultCenter]
-                            postNotificationName:@"com.jibeib.usbmirror.keyboard"
-                            object:nil
-                            userInfo:@{@"action": @"insert", @"text": text}
-                            deliverImmediately:YES];
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            [UIPasteboard generalPasteboard].string = text;
+                            CFNotificationCenterPostNotification(
+                                CFNotificationCenterGetDarwinNotifyCenter(),
+                                CFSTR("com.jibeib.usbmirror.keyboard.paste"),
+                                NULL, NULL, true);
+                        });
                     }
                 }
                 else if (line[0] == '1' && line[1] == '2') {
-                    NSInteger count = MAX(1, atoi(line + 2));
-                    [[NSDistributedNotificationCenter defaultCenter]
-                        postNotificationName:@"com.jibeib.usbmirror.keyboard"
-                        object:nil
-                        userInfo:@{@"action": @"delete", @"count": @(count)}
-                        deliverImmediately:YES];
+                    CFNotificationCenterPostNotification(
+                        CFNotificationCenterGetDarwinNotifyCenter(),
+                        CFSTR("com.jibeib.usbmirror.keyboard.delete"),
+                        NULL, NULL, true);
                 }
                 else if (line[0] == '1' && line[1] == '3') {
                     dispatch_async(dispatch_get_main_queue(), ^{
