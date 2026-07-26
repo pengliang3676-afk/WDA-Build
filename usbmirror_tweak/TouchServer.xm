@@ -119,6 +119,13 @@ static void ZXHandleTouchClient(int client)
                         if (state != 0) ZXPressPowerButton();
                     });
                 }
+                else if (line[0] == '1' && line[1] == '6') {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        ZXPressHomeButton();
+                        usleep(140000);
+                        ZXPressHomeButton();
+                    });
+                }
                 if (!end) break;
                 line = end + 2;
             }
