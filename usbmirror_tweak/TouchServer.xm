@@ -1,5 +1,6 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+#import <Foundation/NSDistributedNotificationCenter.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <string.h>
@@ -26,6 +27,26 @@ static void ZXHandleTouchClient(int client)
                 if (end) *end = 0;
                 if (line[0] == '1' && line[1] == '0' && line[2] != 0) {
                     performTouchFromRawData((UInt8 *)(line + 2));
+                }
+                else if (line[0] == '1' && line[1] == '1' && line[2] != 0) {
+                    NSString *encoded = [NSString stringWithUTF8String:(line + 2)];
+                    NSData *data = [[NSData alloc] initWithBase64EncodedString:encoded options:0];
+                    NSString *text = data ? [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] : nil;
+                    if (text) {
+                        [[NSDistributedNotificationCenter defaultCenter]
+                            postNotificationName:@"com.jibeib.usbmirror.keyboard"
+                            object:nil
+                            userInfo:@{@"action": @"insert", @"text": text}
+                            deliverImmediately:YES];
+                    }
+                }
+                else if (line[0] == '1' && line[1] == '2') {
+                    NSInteger count = MAX(1, atoi(line + 2));
+                    [[NSDistributedNotificationCenter defaultCenter]
+                        postNotificationName:@"com.jibeib.usbmirror.keyboard"
+                        object:nil
+                        userInfo:@{@"action": @"delete", @"count": @(count)}
+                        deliverImmediately:YES];
                 }
                 if (!end) break;
                 line = end + 2;
@@ -67,8 +88,12 @@ static void ZXRunTouchServer(void)
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         // Match ZXTouch's proven lifecycle: do not touch IOHID from %ctor.
+        // Sender-ID discovery must be registered on SpringBoard's main run loop.
+        // A GCD worker thread has no continuously running CFRunLoop, so after a
+        // reboot the callback never receives a real digitizer event and every
+        // injected touch is silently discarded while senderID remains zero.
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC),
-                       dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+                       dispatch_get_main_queue(), ^{
             @autoreleasepool {
                 CGRect bounds = UIScreen.mainScreen.nativeBounds;
                 CGFloat width = MIN(bounds.size.width, bounds.size.height);
@@ -76,7 +101,9 @@ static void ZXRunTouchServer(void)
                 [Screen setScreenSize:width height:height];
                 initSenderId();
                 initTouchGetScreenSize();
-                ZXRunTouchServer();
+                dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+                    ZXRunTouchServer();
+                });
             }
         });
     });

@@ -4,12 +4,17 @@ THEOS_PACKAGE_SCHEME = rootless
 
 include $(THEOS)/makefiles/common.mk
 
-TWEAK_NAME = USBMirror
+TWEAK_NAME = USBMirror USBMirrorKeyboard
 USBMirror_FILES = H264Server.mm TouchServer.xm ../vendor/zxtouchrootless-main/pccontrol/Touch.xm ../vendor/zxtouchrootless-main/pccontrol/Screen.xm ../vendor/zxtouchrootless-main/pccontrol/Common.xm
 USBMirror_CFLAGS = -fobjc-arc -Wno-error -Wno-deprecated-declarations -Wno-unused-function -Wno-module-import-in-extern-c -I. -I../vendor/zxtouchrootless-main/pccontrol
 USBMirror_FRAMEWORKS = UIKit Foundation IOSurface VideoToolbox CoreMedia CoreVideo CoreGraphics
 USBMirror_PRIVATE_FRAMEWORKS = IOKit
 USBMirror_LIBRARIES = substrate
 USBMirror_CODESIGN_FLAGS = -Sentitlements.plist
+
+USBMirrorKeyboard_FILES = KeyboardReceiver.xm
+USBMirrorKeyboard_CFLAGS = -fobjc-arc -Wno-error -Wno-module-import-in-extern-c
+USBMirrorKeyboard_FRAMEWORKS = UIKit Foundation
+USBMirrorKeyboard_LIBRARIES = substrate
 
 include $(THEOS_MAKE_PATH)/tweak.mk
