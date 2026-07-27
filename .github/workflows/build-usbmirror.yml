@@ -18,7 +18,7 @@ jobs:
 
       - name: Prepare USBMirror sources
         run: |
-          unzip -o usbmirror-source.zip
+          unzip -o usbmirror-source.zip || test -d usbmirror_tweak
           mkdir -p vendor/zxtouchrootless-main
           cp -R ZXTouchRootless/pccontrol vendor/zxtouchrootless-main/
 
