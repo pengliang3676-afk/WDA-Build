@@ -38,6 +38,6 @@ jobs:
       - name: Upload one-phone test package
         uses: actions/upload-artifact@v4
         with:
-          name: SE2-USBMirror-H264-Dopamine-0.3.2-test
+          name: SE2-USBMirror-H264-Dopamine-0.3.3-test
           path: output/*.deb
           if-no-files-found: error
